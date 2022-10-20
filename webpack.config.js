@@ -25,6 +25,9 @@ module.exports = {
 			},
 		]
 	},
+	resolve: {
+		extensions: [".js", ".jsx", ".ts", ".tsx"],
+	},
 	devServer: {
 		static: {
 			directory: path.join(__dirname, "/dist")

@@ -1,13 +1,8 @@
-const canvas: HTMLCanvasElement = document.getElementById("renderer") as HTMLCanvasElement;
+/* eslint no-console:0 consistent-return:0 */
+"use strict";
 
-// Configure the canvas
-canvas.width = 1024;
-canvas.height = 768;
+import Renderer from "./renderer";
 
-const gl = canvas.getContext("webgl");	// Create the WebGl Context
+const r = new Renderer(1, 1);
 
-if (!gl) {
-	alert("WebGl is not available");
-}
-
-
+r.draw();
