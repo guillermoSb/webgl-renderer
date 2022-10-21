@@ -16,6 +16,8 @@ export default class Renderer {
 	draw() {
 		// Get A WebGL context
 		var canvas = document.querySelector("#renderer") as HTMLCanvasElement;
+		canvas.width = canvas.clientWidth;
+		canvas.height = canvas.clientHeight;
 		var gl = canvas.getContext("webgl");
 		if (!gl) {
 			return;
@@ -54,7 +56,7 @@ export default class Renderer {
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
 		// Clear the canvas
-		gl.clearColor(0, 0, 0, 0);
+		gl.clearColor(0, 0, 0, 1);
 		gl.clear(gl.COLOR_BUFFER_BIT);
 
 		// Tell it to use our program (pair of shaders)

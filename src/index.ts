@@ -1,5 +1,5 @@
 /* eslint no-console:0 consistent-return:0 */
-"use strict";
+import "./style.css";
 
 import Renderer from "./renderer";
 
