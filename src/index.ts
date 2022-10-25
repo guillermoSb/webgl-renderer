@@ -5,4 +5,4 @@ import Renderer from "./renderer";
 
 const r = new Renderer(1, 1);
 
-r.draw();
+requestAnimationFrame((t) => r.draw(t));
