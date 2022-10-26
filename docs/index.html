@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>WebGL Renderer - Guillermo</title>
+</head>
+<body>
+	<div class="max-w-screen mx-8 mt-8">
+		<h1 class="font-sans text-5xl mb-2">WebGl Renderer</h1>
+		<main class="flex items-center justify-center">
+			<canvas id="renderer" class="block flex-1" style="height: 800px; width: 900px;"></canvas>
+		</main>
+	</div>
+	<script id="vertex-shader-2d" type="notjs">
+ 
+  // an attribute will receive data from a buffer
+  attribute vec4 a_position;
+	attribute vec4 a_color;
+	uniform mat4 u_matrix;
+	varying vec4 v_color;
+ 
+  // all shaders have a main function
+  void main() {
+	 gl_Position = u_matrix * a_position;
+	 v_color = a_color;
+  }
+ 
+</script>
+ 
+<script id="fragment-shader-2d" type="notjs">
+ 
+  // fragment shaders don't have a default precision so we need
+  // to pick one. mediump is a good default
+  precision mediump float;
+	varying vec4 v_color;
+ 
+  void main() {
+    // gl_FragColor is a special variable a fragment shader
+    // is responsible for setting
+    gl_FragColor = v_color;
+  }
+ 
+</script>
+	<script src="index.js"></script>
+</body>
+</html>
