@@ -54,6 +54,17 @@ export default class Renderer {
 		this.perspectiveMatrix = matrix;
 		this.gl = gl;
 		this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
+		this.initProgram(this.gl);
+		const textureLocation = this.gl.getUniformLocation(this.program, "u_texture");
+		const texture = gl.createTexture();
+		const image = new Image();
+		image.src = "model.bmp";
+		image.addEventListener("load", () => {
+			this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+    	this.gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, image);
+			gl.generateMipmap(gl.TEXTURE_2D);
+			this.gl.uniform1i(textureLocation, 0);
+		});
 	}
 
 	createObj(obj: Obj, translation: vec3, rotation: vec3, scale: vec3) {
@@ -103,7 +114,6 @@ export default class Renderer {
 
 	draw(now: number) {
 		now *= 0.001;
-		const program = this.initProgram(this.gl);	// Init WebGl Program
 		let deltaTime = now - this.then;
 		this.gl.enable(this.gl.CULL_FACE);	// Do not draw back facing triangles
 		this.gl.enable(this.gl.DEPTH_TEST);	// Enable depth buffer
@@ -114,7 +124,7 @@ export default class Renderer {
 			object.rotation[1] += 1 * deltaTime;
 			var positionBuffer = this.gl.createBuffer();
 			this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
-			let matrixLocation = this.gl.getUniformLocation(program, "u_matrix");	// Get the location of the matrix
+			let matrixLocation = this.gl.getUniformLocation(this.program, "u_matrix");	// Get the location of the matrix
 			let matrix = mat4.clone(this.perspectiveMatrix);
 			mat4.translate(matrix, matrix, object.translation);
 			mat4.rotateX(matrix, matrix, object.rotation[0]);
@@ -123,18 +133,32 @@ export default class Renderer {
 			mat4.scale(matrix, matrix, object.scale);
 			const newM = mat4.clone(this.viewMatrix);
 			mat4.multiply(newM, matrix, this.viewMatrix);
-			let positionAttributeLocation = this.gl.getAttribLocation(program, "a_position");	// Get the location of the position
+			// Position
+			let positionAttributeLocation = this.gl.getAttribLocation(this.program, "a_position");	// Get the location of the position
 			this.setFigure(this.gl, object.vertexData);
 			this.gl.uniformMatrix4fv(matrixLocation, false, newM);
 			this.gl.enableVertexAttribArray(positionAttributeLocation);
-			var size = 3;          // 2 components per iteration
-			var type = this.gl.FLOAT;   // the data is 32bit floats
-			var normalize = false; // don't normalize the data
-			var stride = 4 * 8; 
-			var offset = 0;        // start at the beginning of the buffer
 			this.gl.vertexAttribPointer(
-				positionAttributeLocation, size, type, normalize, stride, offset);
-			var primitiveType = this.gl.TRIANGLES;
+				positionAttributeLocation,
+				3,
+				this.gl.FLOAT,
+				false,
+				4 * 8,
+				0
+			);
+			// Texture
+			let uvsAttributeLocation = this.gl.getAttribLocation(this.program, "a_textcoord");
+			this.gl.enableVertexAttribArray(uvsAttributeLocation);
+			this.gl.vertexAttribPointer(
+				uvsAttributeLocation,
+				2,
+				this.gl.FLOAT,
+				false,
+				4 * 8,
+				4* 3
+			);
+			
+			let primitiveType = this.gl.TRIANGLES;
 			this.gl.drawArrays(primitiveType, 0, this.polyCount * 3);
 		}
 
@@ -143,7 +167,7 @@ export default class Renderer {
 		requestAnimationFrame(t => this.draw(t));
 	}
 
-	public initProgram(gl: WebGLRenderingContext): WebGLProgram {
+	public initProgram(gl: WebGLRenderingContext) {
 		// Get the strings for our GLSL shaders
 		const vertexShaderSource = (document.querySelector("#vertex-shader-2d") as HTMLScriptElement).text;
 		const fragmentShaderSource = (document.querySelector("#fragment-shader-2d") as HTMLScriptElement).text;
@@ -153,7 +177,7 @@ export default class Renderer {
 		// Link the two shaders into a program
 		var program = this.createProgram(gl, vertexShader, fragmentShader);
 		gl.useProgram(program);
-		return program;
+		this.program = program;
 	}
 
 	public createShader(gl: any, type: any, source: any) {
