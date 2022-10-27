@@ -17,6 +17,10 @@ export default class Renderer {
 	gl: WebGLRenderingContext;
 	program: WebGLProgram;
 	polyCount = 0;
+	drawMode: number;
+	camPosition: vec3 = vec3.fromValues(0, 0, 0);
+	lookAt: vec3 = vec3.fromValues(0, 0, -20);
+	cameraMatrix: mat4 = mat4.create();
 
 	constructor(width: number, height: number) {
 		// Initialize the renderer dimensions
@@ -34,27 +38,15 @@ export default class Renderer {
 		const zNear = 0.01;
 		const zFar = 2000;
 		// Matrix for the camera
-		const lookAt = vec3.fromValues(0, 0, 0);
-		let cameraMatrix = mat4.create();
-		mat4.fromYRotation(cameraMatrix, 0);
-		mat4.translate(cameraMatrix, cameraMatrix, vec3.fromValues(0, 0, 0));
-		var cameraPosition = vec3.fromValues(
-			cameraMatrix[12],
-			cameraMatrix[13],
-			cameraMatrix[14],
-		);
-		var up = vec3.fromValues(0, 1, 0);
-		mat4.lookAt(cameraMatrix, cameraPosition, lookAt, up);
-		let viewMatrix = mat4.create();
-		mat4.invert(viewMatrix, cameraMatrix);
+		this.computeCameraMatrix();
 		// Matrix for the projection
 		let matrix = mat4.create();
 		mat4.perspective(matrix, 2 * Math.PI / 3, aspect, zNear, zFar);
-		this.viewMatrix = viewMatrix;
 		this.perspectiveMatrix = matrix;
 		this.gl = gl;
 		this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
 		this.initProgram(this.gl);
+		this.drawMode = this.gl.TRIANGLES;
 		const textureLocation = this.gl.getUniformLocation(this.program, "u_texture");
 		const texture = gl.createTexture();
 		const image = new Image();
@@ -65,6 +57,48 @@ export default class Renderer {
 			gl.generateMipmap(gl.TEXTURE_2D);
 			this.gl.uniform1i(textureLocation, 0);
 		});
+
+		document.onkeydown = (e) => {
+			const { key } = e;
+	
+			switch (key) {
+				case "1":
+					this.drawMode = this.gl.TRIANGLES;	// Draw mode to triangles
+					break;
+				case "2":
+					this.drawMode = this.gl.POINTS;	// Draw mode to triangles
+					break;
+				case "3":
+					this.drawMode = this.gl.LINES;	// Draw mode to triangles
+					break;
+				case "z":
+					if (this.camPosition[2] <= 1) {
+						this.camPosition[2] += 0.1;
+					}
+					break;
+				case "x":
+					if (this.camPosition[2] >= -4) {
+						this.camPosition[2] -= 0.1;
+					}
+					break;
+				case "ArrowRight":
+					console.log(this.cameraMatrix);
+					break;
+				case "ArrowLeft":
+					this.camPosition[0] += 0.04;
+					break;
+				default:
+					break;
+			}
+		};
+	}
+
+	computeCameraMatrix() {
+		var up = vec3.fromValues(0, 1, 0);
+		mat4.lookAt(this.cameraMatrix, this.camPosition, this.lookAt, up);
+		let viewMatrix = mat4.create();
+		mat4.invert(viewMatrix, this.cameraMatrix);
+		this.viewMatrix = viewMatrix;
 	}
 
 	createObj(obj: Obj, translation: vec3, rotation: vec3, scale: vec3) {
@@ -115,13 +149,13 @@ export default class Renderer {
 	draw(now: number) {
 		now *= 0.001;
 		let deltaTime = now - this.then;
+		this.computeCameraMatrix();
 		this.gl.enable(this.gl.CULL_FACE);	// Do not draw back facing triangles
 		this.gl.enable(this.gl.DEPTH_TEST);	// Enable depth buffer
 		this.gl.clearColor(0, 0, 0, 1);
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);	// Clear depth buffer
 		// draw
 		for (const object of this.sceneObjects) {
-			object.rotation[1] += 1 * deltaTime;
 			var positionBuffer = this.gl.createBuffer();
 			this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
 			let matrixLocation = this.gl.getUniformLocation(this.program, "u_matrix");	// Get the location of the matrix
@@ -158,7 +192,7 @@ export default class Renderer {
 				4* 3
 			);
 			
-			let primitiveType = this.gl.TRIANGLES;
+			let primitiveType = this.drawMode;
 			this.gl.drawArrays(primitiveType, 0, this.polyCount * 3);
 		}
 
@@ -191,140 +225,6 @@ export default class Renderer {
 
 		console.error(gl.getShaderInfoLog(shader));
 		gl.deleteShader(shader);
-	}
-
-	public setColors(gl: WebGLRenderingContext) {
-		gl.bufferData(
-			gl.ARRAY_BUFFER,
-			new Uint8Array([
-				// left column front
-				200, 70, 120,
-				200, 70, 120,
-				200, 70, 120,
-				200, 70, 120,
-				200, 70, 120,
-				200, 70, 120,
-
-				// top rung front
-				200, 70, 120,
-				200, 70, 120,
-				200, 70, 120,
-				200, 70, 120,
-				200, 70, 120,
-				200, 70, 120,
-
-				// middle rung front
-				200, 70, 120,
-				200, 70, 120,
-				200, 70, 120,
-				200, 70, 120,
-				200, 70, 120,
-				200, 70, 120,
-
-				// left column back
-				80, 70, 200,
-				80, 70, 200,
-				80, 70, 200,
-				80, 70, 200,
-				80, 70, 200,
-				80, 70, 200,
-
-				// top rung back
-				80, 70, 200,
-				80, 70, 200,
-				80, 70, 200,
-				80, 70, 200,
-				80, 70, 200,
-				80, 70, 200,
-
-				// middle rung back
-				80, 70, 200,
-				80, 70, 200,
-				80, 70, 200,
-				80, 70, 200,
-				80, 70, 200,
-				80, 70, 200,
-
-				// top
-				70, 200, 210,
-				70, 200, 210,
-				70, 200, 210,
-				70, 200, 210,
-				70, 200, 210,
-				70, 200, 210,
-
-				// top rung right
-				200, 200, 70,
-				200, 200, 70,
-				200, 200, 70,
-				200, 200, 70,
-				200, 200, 70,
-				200, 200, 70,
-
-				// under top rung
-				210, 100, 70,
-				210, 100, 70,
-				210, 100, 70,
-				210, 100, 70,
-				210, 100, 70,
-				210, 100, 70,
-
-				// between top rung and middle
-				210, 160, 70,
-				210, 160, 70,
-				210, 160, 70,
-				210, 160, 70,
-				210, 160, 70,
-				210, 160, 70,
-
-				// top of middle rung
-				70, 180, 210,
-				70, 180, 210,
-				70, 180, 210,
-				70, 180, 210,
-				70, 180, 210,
-				70, 180, 210,
-
-				// right of middle rung
-				100, 70, 210,
-				100, 70, 210,
-				100, 70, 210,
-				100, 70, 210,
-				100, 70, 210,
-				100, 70, 210,
-
-				// bottom of middle rung.
-				76, 210, 100,
-				76, 210, 100,
-				76, 210, 100,
-				76, 210, 100,
-				76, 210, 100,
-				76, 210, 100,
-
-				// right of bottom
-				140, 210, 80,
-				140, 210, 80,
-				140, 210, 80,
-				140, 210, 80,
-				140, 210, 80,
-				140, 210, 80,
-
-				// bottom
-				90, 130, 110,
-				90, 130, 110,
-				90, 130, 110,
-				90, 130, 110,
-				90, 130, 110,
-				90, 130, 110,
-
-				// left side
-				160, 160, 220,
-				160, 160, 220,
-				160, 160, 220,
-				160, 160, 220,
-				160, 160, 220,
-				160, 160, 220]),
-			gl.STATIC_DRAW);
 	}
 
 
