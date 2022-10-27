@@ -15,16 +15,20 @@
 	</div>
 	<script id="vertex-shader-2d" type="notjs">
  
-  // an attribute will receive data from a buffer
+  // Attributes
   attribute vec4 a_position;
-	attribute vec4 a_color;
+	attribute vec2 a_textcoord;
+
+	// Uniforms
 	uniform mat4 u_matrix;
-	varying vec4 v_color;
+	
+	// Varying
+	varying vec2 v_texcoord;
  
   // all shaders have a main function
   void main() {
 	 gl_Position = u_matrix * a_position;
-	 v_color = a_color;
+	 v_texcoord = a_textcoord;
   }
  
 </script>
@@ -34,12 +38,15 @@
   // fragment shaders don't have a default precision so we need
   // to pick one. mediump is a good default
   precision mediump float;
-	varying vec4 v_color;
+	
+	uniform sampler2D u_texture;
+	
+	varying vec2 v_texcoord;
  
   void main() {
     // gl_FragColor is a special variable a fragment shader
     // is responsible for setting
-    gl_FragColor = v_color;
+    gl_FragColor = texture2D(u_texture, -v_texcoord);
   }
  
 </script>

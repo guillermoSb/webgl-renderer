@@ -82,10 +82,16 @@ export default class Renderer {
 					}
 					break;
 				case "ArrowRight":
-					console.log(this.cameraMatrix);
+					// this.sceneObjects[0].rotation[1] += 0.1;
 					break;
 				case "ArrowLeft":
-					this.camPosition[0] += 0.04;
+					// this.sceneObjects[0].rotation[1] -= 0.1;
+					break;
+				case "ArrowUp":
+					// this.sceneObjects[0].rotation[0] += 0.1;
+					break;
+				case "ArrowDown":
+					// this.sceneObjects[0].rotation[0] -= 0.1;
 					break;
 				default:
 					break;
