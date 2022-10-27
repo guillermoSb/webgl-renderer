@@ -1,3 +1,4 @@
+import { Obj } from './obj';
 import { AttributeBuffer, SceneObject, Unifrom } from "./sceneObject";
 import { mat3, mat4, vec2, vec3 } from "gl-matrix";
 
@@ -15,6 +16,7 @@ export default class Renderer {
 	perspectiveMatrix: mat4;
 	gl: WebGLRenderingContext;
 	program: WebGLProgram;
+	polyCount = 0;
 
 	constructor(width: number, height: number) {
 		// Initialize the renderer dimensions
@@ -54,145 +56,49 @@ export default class Renderer {
 		this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
 	}
 
-	createF(translation: vec3, rotation: vec3, scale: vec3) {
-		const positionBufferData = [
-			// left column front
-			0, 0, 0,
-			0, 150, 0,
-			30, 0, 0,
-			0, 150, 0,
-			30, 150, 0,
-			30, 0, 0,
-
-			// top rung front
-			30, 0, 0,
-			30, 30, 0,
-			100, 0, 0,
-			30, 30, 0,
-			100, 30, 0,
-			100, 0, 0,
-
-			// middle rung front
-			30, 60, 0,
-			30, 90, 0,
-			67, 60, 0,
-			30, 90, 0,
-			67, 90, 0,
-			67, 60, 0,
-
-			// left column back
-			0, 0, 30,
-			30, 0, 30,
-			0, 150, 30,
-			0, 150, 30,
-			30, 0, 30,
-			30, 150, 30,
-
-			// top rung back
-			30, 0, 30,
-			100, 0, 30,
-			30, 30, 30,
-			30, 30, 30,
-			100, 0, 30,
-			100, 30, 30,
-
-			// middle rung back
-			30, 60, 30,
-			67, 60, 30,
-			30, 90, 30,
-			30, 90, 30,
-			67, 60, 30,
-			67, 90, 30,
-
-			// top
-			0, 0, 0,
-			100, 0, 0,
-			100, 0, 30,
-			0, 0, 0,
-			100, 0, 30,
-			0, 0, 30,
-
-			// top rung right
-			100, 0, 0,
-			100, 30, 0,
-			100, 30, 30,
-			100, 0, 0,
-			100, 30, 30,
-			100, 0, 30,
-
-			// under top rung
-			30, 30, 0,
-			30, 30, 30,
-			100, 30, 30,
-			30, 30, 0,
-			100, 30, 30,
-			100, 30, 0,
-
-			// between top rung and middle
-			30, 30, 0,
-			30, 60, 30,
-			30, 30, 30,
-			30, 30, 0,
-			30, 60, 0,
-			30, 60, 30,
-
-			// top of middle rung
-			30, 60, 0,
-			67, 60, 30,
-			30, 60, 30,
-			30, 60, 0,
-			67, 60, 0,
-			67, 60, 30,
-
-			// right of middle rung
-			67, 60, 0,
-			67, 90, 30,
-			67, 60, 30,
-			67, 60, 0,
-			67, 90, 0,
-			67, 90, 30,
-
-			// bottom of middle rung.
-			30, 90, 0,
-			30, 90, 30,
-			67, 90, 30,
-			30, 90, 0,
-			67, 90, 30,
-			67, 90, 0,
-
-			// right of bottom
-			30, 90, 0,
-			30, 150, 30,
-			30, 90, 30,
-			30, 90, 0,
-			30, 150, 0,
-			30, 150, 30,
-
-			// bottom
-			0, 150, 0,
-			0, 150, 30,
-			30, 150, 30,
-			0, 150, 0,
-			30, 150, 30,
-			30, 150, 0,
-
-			// left side
-			0, 0, 0,
-			0, 0, 30,
-			0, 150, 30,
-			0, 0, 0,
-			0, 150, 30,
-			0, 150, 0
-		];
+	createObj(obj: Obj, translation: vec3, rotation: vec3, scale: vec3) {
+		const bufferData: number[] = [];
+		for (const face of obj.faces) {
+			for (let i = 0; i < 3; i++) {
+				// Read the position
+				let position = obj.vertices[face[i][0] - 1];
+				bufferData.push(position[0]); // Append the positions
+				bufferData.push(position[1]); // Append the positions
+				bufferData.push(position[2]); // Append the positions
+				// Read the texcoords
+				let uvs = obj.texRecords[face[i][1] - 1];
+				bufferData.push(uvs[0]);
+				bufferData.push(uvs[1]);
+				// Read the normals
+				let normals = obj.normals[face[i][2] - 1];
+				bufferData.push(normals[0]);
+				bufferData.push(normals[1]);
+				bufferData.push(normals[2]);
+			}
+			this.polyCount += 1;
+			if (face.length === 4) {
+				this.polyCount += 1;
+				for (const i of [0, 2, 3]) {
+					// Read the position
+					let position = obj.vertices[face[i][0] - 1];
+					bufferData.push(...position); // Append the positions
+					// Read the texcoords
+					let uvs = obj.texRecords[face[i][1] - 1];
+					bufferData.push(...uvs);
+					// Read the normals
+					let normals = obj.normals[face[i][2] - 1];
+					bufferData.push(...normals);
+				}
+			}
+		}
 		const o: SceneObject = new SceneObject(
 			translation,
 			rotation,
 			scale,
 			this.viewMatrix,
-			positionBufferData
+			bufferData
 		);
 		this.sceneObjects.push(o);
-
 	}
 
 	draw(now: number) {
@@ -214,7 +120,7 @@ export default class Renderer {
 			mat4.rotateX(matrix, matrix, object.rotation[0]);
 			mat4.rotateY(matrix, matrix, object.rotation[1]);
 			mat4.rotateZ(matrix, matrix, object.rotation[2]);
-			mat4.scale(matrix, matrix, vec3.fromValues(1, 1, 1));
+			mat4.scale(matrix, matrix, object.scale);
 			const newM = mat4.clone(this.viewMatrix);
 			mat4.multiply(newM, matrix, this.viewMatrix);
 			let positionAttributeLocation = this.gl.getAttribLocation(program, "a_position");	// Get the location of the position
@@ -224,28 +130,12 @@ export default class Renderer {
 			var size = 3;          // 2 components per iteration
 			var type = this.gl.FLOAT;   // the data is 32bit floats
 			var normalize = false; // don't normalize the data
-			var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
+			var stride = 4 * 8; 
 			var offset = 0;        // start at the beginning of the buffer
 			this.gl.vertexAttribPointer(
 				positionAttributeLocation, size, type, normalize, stride, offset);
-
-			let colorBuffer = this.gl.createBuffer();
-			let colorAttributeLocation = this.gl.getAttribLocation(program, "a_color");	// Get the location of the position
-			this.gl.enableVertexAttribArray(colorAttributeLocation);
-			this.gl.bindBuffer(this.gl.ARRAY_BUFFER, colorBuffer);
-			size = 3;                 // 3 components per iteration
-			type = this.gl.UNSIGNED_BYTE;  // the data is 8bit unsigned values
-			normalize = true;         // normalize the data (convert from 0-255 to 0-1)
-			stride = 0;               // 0 = move forward size * sizeof(type) each iteration to get the next position
-			offset = 0;               // start at the beginning of the buffer
-			this.setColors(this.gl);
-
-			this.gl.vertexAttribPointer(
-				colorAttributeLocation, 3, this.gl.UNSIGNED_BYTE, true, 0, 0);
-
-			var count = 16 * 6;
 			var primitiveType = this.gl.TRIANGLES;
-			this.gl.drawArrays(primitiveType, 0, count);
+			this.gl.drawArrays(primitiveType, 0, this.polyCount * 3);
 		}
 
 
