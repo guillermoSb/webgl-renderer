@@ -18,9 +18,8 @@ export default class Renderer {
 	program: WebGLProgram;
 	polyCount = 0;
 	drawMode: number;
-	camPosition: vec3 = vec3.fromValues(0, 0, 0);
-	lookAt: vec3 = vec3.fromValues(0, 0, -20);
-	cameraMatrix: mat4 = mat4.create();
+	camPosition = vec3.fromValues(0, 0, 5);
+	camRotation = vec3.fromValues(0, 0, 0);
 
 	constructor(width: number, height: number) {
 		// Initialize the renderer dimensions
@@ -35,10 +34,10 @@ export default class Renderer {
 			return;
 		}
 		const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-		const zNear = 0.01;
+		const zNear = 0.001;
 		const zFar = 2000;
 		// Matrix for the camera
-		this.computeCameraMatrix();
+		this.computeCameraMatrix(vec3.fromValues(0,0,0));
 		// Matrix for the projection
 		let matrix = mat4.create();
 		mat4.perspective(matrix, 2 * Math.PI / 3, aspect, zNear, zFar);
@@ -72,26 +71,32 @@ export default class Renderer {
 					this.drawMode = this.gl.LINES;	// Draw mode to triangles
 					break;
 				case "z":
-					if (this.camPosition[2] <= 1) {
-						this.camPosition[2] += 0.1;
-					}
+					this.computeCameraMatrix(vec3.fromValues(0,0,-0.5));
 					break;
 				case "x":
-					if (this.camPosition[2] >= -4) {
-						this.camPosition[2] -= 0.1;
-					}
+					this.computeCameraMatrix(vec3.fromValues(0, 0, 0.5));
+					break;
+				case "w":
+					this.computeCameraMatrix(vec3.fromValues(0, 0.5, 0));
+					break;
+				case "s":
+					this.computeCameraMatrix(vec3.fromValues(0, -0.5, 0));
 					break;
 				case "ArrowRight":
-					// this.sceneObjects[0].rotation[1] += 0.1;
+					this.camRotation[1] -= 0.1;
+					this.computeCameraMatrix(vec3.create());
 					break;
 				case "ArrowLeft":
-					// this.sceneObjects[0].rotation[1] -= 0.1;
+					this.camRotation[1] += 0.1;
+					this.computeCameraMatrix(vec3.create());
 					break;
 				case "ArrowUp":
-					// this.sceneObjects[0].rotation[0] += 0.1;
+					this.camRotation[0] -= 0.1;
+					this.computeCameraMatrix(vec3.create());
 					break;
 				case "ArrowDown":
-					// this.sceneObjects[0].rotation[0] -= 0.1;
+					this.camRotation[0] += 0.1;
+					this.computeCameraMatrix(vec3.create());
 					break;
 				default:
 					break;
@@ -99,12 +104,20 @@ export default class Renderer {
 		};
 	}
 
-	computeCameraMatrix() {
-		var up = vec3.fromValues(0, 1, 0);
-		mat4.lookAt(this.cameraMatrix, this.camPosition, this.lookAt, up);
-		let viewMatrix = mat4.create();
-		mat4.invert(viewMatrix, this.cameraMatrix);
-		this.viewMatrix = viewMatrix;
+	computeCameraMatrix(translation: vec3) {
+		let cameraMatrix = mat4.create();
+		mat4.translate(cameraMatrix, cameraMatrix, this.camPosition);
+		mat4.translate(cameraMatrix, cameraMatrix, translation);
+		let newCamPosition = vec3.fromValues(
+      cameraMatrix[12],
+      cameraMatrix[13],
+      cameraMatrix[14],
+		);
+		this.camPosition = newCamPosition;
+		mat4.lookAt(cameraMatrix, newCamPosition, vec3.fromValues(0, 0, 0), vec3.fromValues(0, 1, 0));
+		mat4.rotateX(cameraMatrix, cameraMatrix, this.camRotation[0]);
+		mat4.rotateY(cameraMatrix, cameraMatrix, this.camRotation[1]);
+		this.viewMatrix = cameraMatrix;
 	}
 
 	createObj(obj: Obj, translation: vec3, rotation: vec3, scale: vec3) {
@@ -155,7 +168,6 @@ export default class Renderer {
 	draw(now: number) {
 		now *= 0.001;
 		let deltaTime = now - this.then;
-		this.computeCameraMatrix();
 		this.gl.enable(this.gl.CULL_FACE);	// Do not draw back facing triangles
 		this.gl.enable(this.gl.DEPTH_TEST);	// Enable depth buffer
 		this.gl.clearColor(0, 0, 0, 1);
