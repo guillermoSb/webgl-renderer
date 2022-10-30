@@ -20,6 +20,8 @@ export default class Renderer {
 	drawMode: number;
 	camPosition = vec3.fromValues(0, 0, 5);
 	camRotation = vec3.fromValues(0, 0, 0);
+	targetPosition = vec3.fromValues(0, 0, 0);
+	zoomLevel = 5;
 
 	constructor(width: number, height: number) {
 		// Initialize the renderer dimensions
@@ -71,15 +73,23 @@ export default class Renderer {
 					this.drawMode = this.gl.LINES;	// Draw mode to triangles
 					break;
 				case "z":
-					this.computeCameraMatrix(vec3.fromValues(0,0,-0.5));
+					if (this.zoomLevel > 0) {
+						this.computeCameraMatrix(vec3.fromValues(0, 0, -0.5));
+						this.zoomLevel -= 1;
+					}
 					break;
 				case "x":
-					this.computeCameraMatrix(vec3.fromValues(0, 0, 0.5));
+					if (this.zoomLevel < 10) {
+						this.computeCameraMatrix(vec3.fromValues(0, 0, 0.5));
+						this.zoomLevel += 1;
+					}	
 					break;
 				case "w":
+					this.targetPosition[1] += 0.5;
 					this.computeCameraMatrix(vec3.fromValues(0, 0.5, 0));
 					break;
 				case "s":
+					this.targetPosition[1] -= 0.5;
 					this.computeCameraMatrix(vec3.fromValues(0, -0.5, 0));
 					break;
 				case "ArrowRight":
@@ -114,7 +124,7 @@ export default class Renderer {
       cameraMatrix[14],
 		);
 		this.camPosition = newCamPosition;
-		mat4.lookAt(cameraMatrix, newCamPosition, vec3.fromValues(0, 0, 0), vec3.fromValues(0, 1, 0));
+		mat4.lookAt(cameraMatrix, newCamPosition,this.targetPosition, vec3.fromValues(0, 1, 0));
 		mat4.rotateX(cameraMatrix, cameraMatrix, this.camRotation[0]);
 		mat4.rotateY(cameraMatrix, cameraMatrix, this.camRotation[1]);
 		this.viewMatrix = cameraMatrix;
