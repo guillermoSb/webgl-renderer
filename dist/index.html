@@ -59,18 +59,18 @@
 		// Calculate the dot product 
 		light = dot(normal, v_surfaceToLight);
 		if(light < 0.0) {
-			light = 0.0;
+			intensity = 0.0;
 		} else if (light >= 0.0 && light < 0.2) {
-			light = 0.2;
+			intensity = 0.2;
 		} else if (light >= 0.2 && light < 0.5) {
-			light = 0.5;
+			intensity = 0.5;
 		} else if (light >= 0.5 && light < 0.7) {
-			light = 0.7;
+			intensity = 0.7;
 		} else if (light >= 0.7 && light <= 1.0) {
-			light = 1.0;
+			intensityz = 1.0;
 		}
-    gl_FragColor = texture2D(u_texture, -v_texcoord) * l_intensity;
-		gl_FragColor.rgb *= (light + 0.4);	// Adding
+    gl_FragColor = texture2D(u_texture, -v_texcoord);
+		gl_FragColor.rgb *= ((light * intensity) + 0.4);	// Adding ambient light
   }
  
 </script>
