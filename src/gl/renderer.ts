@@ -1,6 +1,6 @@
 import { Obj } from './obj';
-import { AttributeBuffer, SceneObject, Unifrom } from "./sceneObject";
-import { mat3, mat4, vec2, vec3 } from "gl-matrix";
+import { SceneObject } from "./sceneObject";
+import { mat4, vec3 } from "gl-matrix";
 
 /**
  * Defines the structure of a Renderer
@@ -22,7 +22,9 @@ export default class Renderer {
 	camRotation = vec3.fromValues(0, 0, 0);
 	targetPosition = vec3.fromValues(0, 0, 0);
 	zoomLevel = 5;
-
+	delta = 0;
+	lightIntensity = 1;
+	lightPosition = vec3.fromValues(0, 0, 100);
 	constructor(width: number, height: number) {
 		// Initialize the renderer dimensions
 		this.width = width;
@@ -33,6 +35,7 @@ export default class Renderer {
 		canvas.height = canvas.clientHeight;
 		let gl = canvas.getContext("webgl");
 		if (!gl) {
+			alert("No webgl support available");
 			return;
 		}
 		const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
@@ -61,7 +64,7 @@ export default class Renderer {
 
 		document.onkeydown = (e) => {
 			const { key } = e;
-	
+			e.preventDefault();
 			switch (key) {
 				case "1":
 					this.drawMode = this.gl.TRIANGLES;	// Draw mode to triangles
@@ -85,27 +88,27 @@ export default class Renderer {
 					}	
 					break;
 				case "w":
-					this.targetPosition[1] += 0.5;
-					this.computeCameraMatrix(vec3.fromValues(0, 0.5, 0));
+					this.targetPosition[1] += 4 * this.delta;
+					this.computeCameraMatrix(vec3.fromValues(0, 4 * this.delta, 0));
 					break;
 				case "s":
-					this.targetPosition[1] -= 0.5;
-					this.computeCameraMatrix(vec3.fromValues(0, -0.5, 0));
+					this.targetPosition[1] -= 4 * this.delta;
+					this.computeCameraMatrix(vec3.fromValues(0, -4 * this.delta, 0));
 					break;
 				case "ArrowRight":
-					this.camRotation[1] -= 0.1;
+					this.camRotation[1] -= 4 * this.delta;
 					this.computeCameraMatrix(vec3.create());
 					break;
 				case "ArrowLeft":
-					this.camRotation[1] += 0.1;
+					this.camRotation[1] += 4 * this.delta;
 					this.computeCameraMatrix(vec3.create());
 					break;
 				case "ArrowUp":
-					this.camRotation[0] -= 0.1;
+					this.camRotation[0] -= 4 * this.delta;
 					this.computeCameraMatrix(vec3.create());
 					break;
 				case "ArrowDown":
-					this.camRotation[0] += 0.1;
+					this.camRotation[0] += 4 * this.delta;
 					this.computeCameraMatrix(vec3.create());
 					break;
 				default:
@@ -128,6 +131,9 @@ export default class Renderer {
 		mat4.rotateX(cameraMatrix, cameraMatrix, this.camRotation[0]);
 		mat4.rotateY(cameraMatrix, cameraMatrix, this.camRotation[1]);
 		this.viewMatrix = cameraMatrix;
+		for (const object of this.sceneObjects) {
+			object.viewMatrix = mat4.clone(this.viewMatrix);
+		}
 	}
 
 	createObj(obj: Obj, translation: vec3, rotation: vec3, scale: vec3) {
@@ -169,62 +175,24 @@ export default class Renderer {
 			translation,
 			rotation,
 			scale,
-			this.viewMatrix,
-			bufferData
+			mat4.clone(this.viewMatrix),
+			bufferData,
+			this.polyCount
 		);
 		this.sceneObjects.push(o);
 	}
 
 	draw(now: number) {
 		now *= 0.001;
-		let deltaTime = now - this.then;
+		this.delta = now - this.then;
 		this.gl.enable(this.gl.CULL_FACE);	// Do not draw back facing triangles
 		this.gl.enable(this.gl.DEPTH_TEST);	// Enable depth buffer
 		this.gl.clearColor(0, 0, 0, 1);
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);	// Clear depth buffer
 		// draw
 		for (const object of this.sceneObjects) {
-			var positionBuffer = this.gl.createBuffer();
-			this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
-			let matrixLocation = this.gl.getUniformLocation(this.program, "u_matrix");	// Get the location of the matrix
-			let matrix = mat4.clone(this.perspectiveMatrix);
-			mat4.translate(matrix, matrix, object.translation);
-			mat4.rotateX(matrix, matrix, object.rotation[0]);
-			mat4.rotateY(matrix, matrix, object.rotation[1]);
-			mat4.rotateZ(matrix, matrix, object.rotation[2]);
-			mat4.scale(matrix, matrix, object.scale);
-			const newM = mat4.clone(this.viewMatrix);
-			mat4.multiply(newM, matrix, this.viewMatrix);
-			// Position
-			let positionAttributeLocation = this.gl.getAttribLocation(this.program, "a_position");	// Get the location of the position
-			this.setFigure(this.gl, object.vertexData);
-			this.gl.uniformMatrix4fv(matrixLocation, false, newM);
-			this.gl.enableVertexAttribArray(positionAttributeLocation);
-			this.gl.vertexAttribPointer(
-				positionAttributeLocation,
-				3,
-				this.gl.FLOAT,
-				false,
-				4 * 8,
-				0
-			);
-			// Texture
-			let uvsAttributeLocation = this.gl.getAttribLocation(this.program, "a_textcoord");
-			this.gl.enableVertexAttribArray(uvsAttributeLocation);
-			this.gl.vertexAttribPointer(
-				uvsAttributeLocation,
-				2,
-				this.gl.FLOAT,
-				false,
-				4 * 8,
-				4* 3
-			);
-			
-			let primitiveType = this.drawMode;
-			this.gl.drawArrays(primitiveType, 0, this.polyCount * 3);
+			object.draw(this.gl, this.program, mat4.clone(this.perspectiveMatrix), this.lightIntensity, this.lightPosition);
 		}
-
-
 		this.then = now;
 		requestAnimationFrame(t => this.draw(t));
 	}

@@ -1,4 +1,4 @@
-import { mat2d } from "gl-matrix";
+import { mat2d, mat4 } from "gl-matrix";
 import * as fs from "fs";
 
 export class Obj {
