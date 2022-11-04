@@ -27,8 +27,6 @@
 			varying float l_intensity;
 			varying vec3 v_surfaceToLight;
 			varying vec3 normal;
-		
-
 			// all shaders have a main function
 			void main() {
 			gl_Position = u_matrix * a_position;
@@ -55,13 +53,24 @@
 	
 
 	float light;
+	float intensity;
  
   void main() {
 		// Calculate the dot product 
 		light = dot(normal, v_surfaceToLight);
-    
-    gl_FragColor = texture2D(u_texture, -v_texcoord);
-		gl_FragColor.rgb *= light;
+		if(light < 0.0) {
+			light = 0.0;
+		} else if (light >= 0.0 && light < 0.2) {
+			light = 0.2;
+		} else if (light >= 0.2 && light < 0.5) {
+			light = 0.5;
+		} else if (light >= 0.5 && light < 0.7) {
+			light = 0.7;
+		} else if (light >= 0.7 && light <= 1.0) {
+			light = 1.0;
+		}
+    gl_FragColor = texture2D(u_texture, -v_texcoord) * l_intensity;
+		gl_FragColor.rgb *= (light + 0.4);	// Adding ambient light
   }
  
 </script>

@@ -95,6 +95,12 @@ export default class Renderer {
 					this.targetPosition[1] -= 4 * this.delta;
 					this.computeCameraMatrix(vec3.fromValues(0, -4 * this.delta, 0));
 					break;
+				case "d":
+					vec3.rotateY(this.lightPosition, this.lightPosition, vec3.fromValues(0, 0, 0), 4 * this.delta);
+					break;
+				case "a":
+					vec3.rotateY(this.lightPosition, this.lightPosition, vec3.fromValues(0, 0, 0), -4 * this.delta);
+					break;
 				case "ArrowRight":
 					this.camRotation[1] -= 4 * this.delta;
 					this.computeCameraMatrix(vec3.create());
