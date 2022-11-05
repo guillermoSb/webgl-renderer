@@ -7,8 +7,24 @@
 	<title>WebGL Renderer - Guillermo</title>
 </head>
 <body>
+	<div class="header">
+		<nav class="w-screen py-3 px-6 d-flex bg-indigo-700 inline-flex justify-between">
+			<h1 class="font-sans text-2xl text-white text-bold">WeblRenderer</h1>
+			<ul class="inline-flex gap-4">
+				<li>
+					<button class="px-2 py-1 text-white bg-indigo-600 rounded-sm hover:-translate-y-1 transition-all">Toon Shader</button>
+				</li>
+				<li>
+					<button class="px-2 py-1 text-white bg-indigo-600 rounded-sm hover:-translate-y-1 transition-all">Wavy Shader</button>
+				</li>
+				<li>
+					<button class="px-2 py-1 text-white bg-indigo-600 rounded-sm hover:-translate-y-1 transition-all">Wavy Shader</button>
+				</li>
+			</ul>
+		</nav>
+	</div>
 	<div class="max-w-screen mx-8 mt-8">
-		<h1 class="font-sans text-5xl mb-2">WebGl Renderer</h1>
+
 		<main class="flex items-center justify-center">
 			<canvas id="renderer" class="block flex-1" style="height: 700px; width: 900px;"></canvas>
 		</main>
@@ -67,7 +83,7 @@
 		} else if (light >= 0.5 && light < 0.7) {
 			intensity = 0.7;
 		} else if (light >= 0.7 && light <= 1.0) {
-			intensityz = 1.0;
+			intensity = 1.0;
 		}
     gl_FragColor = texture2D(u_texture, -v_texcoord);
 		gl_FragColor.rgb *= ((light * intensity) + 0.4);	// Adding ambient light
