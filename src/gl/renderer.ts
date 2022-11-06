@@ -25,6 +25,7 @@ export default class Renderer {
 	delta = 0;
 	lightIntensity = 1;
 	lightPosition = vec3.fromValues(0, 0, 100);
+
 	constructor(width: number, height: number) {
 		// Initialize the renderer dimensions
 		this.width = width;
@@ -48,8 +49,8 @@ export default class Renderer {
 		mat4.perspective(matrix, 2 * Math.PI / 3, aspect, zNear, zFar);
 		this.perspectiveMatrix = matrix;
 		this.gl = gl;
+		this.initProgram("toonVertexShader", "toonFragmentShader");
 		this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
-		this.initProgram(this.gl);
 		this.drawMode = this.gl.TRIANGLES;
 		const textureLocation = this.gl.getUniformLocation(this.program, "u_texture");
 		const texture = gl.createTexture();
@@ -195,6 +196,9 @@ export default class Renderer {
 		this.gl.enable(this.gl.DEPTH_TEST);	// Enable depth buffer
 		this.gl.clearColor(0, 0, 0, 1);
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);	// Clear depth buffer
+		this.computeCameraMatrix(vec3.create());
+		let timeUniformLocation = this.gl.getUniformLocation(this.program, "u_time");
+		this.gl.uniform1f(timeUniformLocation, now);
 		// draw
 		for (const object of this.sceneObjects) {
 			object.draw(this.gl, this.program, mat4.clone(this.perspectiveMatrix), this.lightIntensity, this.lightPosition);
@@ -203,18 +207,20 @@ export default class Renderer {
 		requestAnimationFrame(t => this.draw(t));
 	}
 
-	public initProgram(gl: WebGLRenderingContext) {
+	public initProgram(vertexShaderName: string, fragmentShaderName: string) {
 		// Get the strings for our GLSL shaders
-		const vertexShaderSource = (document.querySelector("#vertex-shader-2d") as HTMLScriptElement).text;
-		const fragmentShaderSource = (document.querySelector("#fragment-shader-2d") as HTMLScriptElement).text;
+		const vertexShaderSource = (document.querySelector(`#${vertexShaderName}`) as HTMLScriptElement).text;
+		const fragmentShaderSource = (document.querySelector(`#${fragmentShaderName}`) as HTMLScriptElement).text;
 		// create GLSL shaders, upload the GLSL source, compile the shaders
-		var vertexShader = this.createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-		var fragmentShader = this.createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+		const vertexShader =  this.createShader(this.gl, this.gl.VERTEX_SHADER, vertexShaderSource);
+		const fragmentShader = this.createShader(this.gl, this.gl.FRAGMENT_SHADER, fragmentShaderSource);
 		// Link the two shaders into a program
-		var program = this.createProgram(gl, vertexShader, fragmentShader);
-		gl.useProgram(program);
+		var program = this.createProgram(this.gl, vertexShader, fragmentShader);
+		this.gl.useProgram(program);
 		this.program = program;
 	}
+
+
 
 	public createShader(gl: any, type: any, source: any) {
 		var shader = gl.createShader(type);

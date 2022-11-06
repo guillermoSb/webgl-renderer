@@ -12,13 +12,13 @@
 			<h1 class="font-sans text-2xl text-white text-bold">WeblRenderer</h1>
 			<ul class="inline-flex gap-4">
 				<li>
-					<button class="px-2 py-1 text-white bg-indigo-600 rounded-sm hover:-translate-y-1 transition-all">Toon Shader</button>
+					<button id="toonShader" class="px-2 py-1 text-white bg-indigo-600 rounded-sm hover:-translate-y-1 transition-all">Toon Shader</button>
 				</li>
 				<li>
-					<button class="px-2 py-1 text-white bg-indigo-600 rounded-sm hover:-translate-y-1 transition-all">Wavy Shader</button>
+					<button id="wavyShader" class="px-2 py-1 text-white bg-indigo-600 rounded-sm hover:-translate-y-1 transition-all">Wavy Shader</button>
 				</li>
 				<li>
-					<button class="px-2 py-1 text-white bg-indigo-600 rounded-sm hover:-translate-y-1 transition-all">Wavy Shader</button>
+					<button id="lineShader" class="px-2 py-1 text-white bg-indigo-600 rounded-sm hover:-translate-y-1 transition-all">Line Shader</button>
 				</li>
 			</ul>
 		</nav>
@@ -29,7 +29,7 @@
 			<canvas id="renderer" class="block flex-1" style="height: 700px; width: 900px;"></canvas>
 		</main>
 	</div>
-	<script id="vertex-shader-2d" type="notjs"> 
+	<script id="toonVertexShader" type="notjs"> 
 			// Attributes
 			attribute vec4 a_position;
 			attribute vec2 a_textcoord;
@@ -38,23 +38,27 @@
 			uniform float u_intensity;
 			uniform vec3 u_lightPosition;
 			uniform mat4 u_matrix;
+			uniform float u_time;
 			// Varying
 			varying vec2 v_texcoord;
 			varying float l_intensity;
 			varying vec3 v_surfaceToLight;
 			varying vec3 normal;
+			varying vec4 position;
+		
 			// all shaders have a main function
 			void main() {
-			gl_Position = u_matrix * a_position;
-			v_texcoord = a_textcoord;
-			l_intensity = u_intensity;
-			v_surfaceToLight = normalize(u_lightPosition - gl_Position.xyz);
-			normal = normalize(a_normal);
+				gl_Position = u_matrix * a_position;
+				v_texcoord = a_textcoord;
+				l_intensity = u_intensity;
+				v_surfaceToLight = normalize(u_lightPosition - gl_Position.xyz);
+				normal = normalize(a_normal);
+				position = a_position;
 			}
  
 </script>
  
-<script id="fragment-shader-2d" type="notjs">
+<script id="toonFragmentShader" type="notjs">
  
   // fragment shaders don't have a default precision so we need
   // to pick one. mediump is a good default
@@ -90,6 +94,94 @@
   }
  
 </script>
-	<script src="index.js"></script>
+
+
+<script id="wavyVertexShader" type="notjs">
+ 
+  // Attributes
+	attribute vec4 a_position;
+	attribute vec2 a_textcoord;
+	attribute vec3 a_normal;
+	// Uniforms
+	uniform float u_intensity;
+	uniform vec3 u_lightPosition;
+	uniform mat4 u_matrix;
+	uniform float u_time;
+	// Varying
+	varying vec2 v_texcoord;
+	varying float l_intensity;
+	varying vec3 v_surfaceToLight;
+	varying vec3 normal;
+	varying float cosineThing;
+	varying float normalDiff;
+	// all shaders have a main function
+
+	vec4 position;
+	void main() {
+		position = a_position;
+		cosineThing =  0.5 * cos(position.x + 4.0 * u_time);
+		position.xyz += (0.5 + cosineThing) * 0.1 * a_normal;
+		position.xyz -= (0.5 + 0.5 * cos(position.y + 4.0 * u_time)) * 0.1 * a_normal;
+		gl_Position = u_matrix * position;
+		v_texcoord = a_textcoord;
+		l_intensity = u_intensity;
+		v_surfaceToLight = normalize(u_lightPosition - gl_Position.xyz);
+		normal = normalize(a_normal);
+		normalDiff = length(position - a_position);
+	}
+</script>
+
+<script id="phongFragmentShader" type="notjs">
+ 
+  // fragment shaders don't have a default precision so we need
+  // to pick one. mediump is a good default
+  precision mediump float;
+	uniform sampler2D u_texture;
+	varying vec2 v_texcoord;
+	varying float l_intensity;
+	varying vec3 v_surfaceToLight;
+	varying vec3 normal;
+	varying float cosineThing;
+	varying float normalDiff;
+	float light;
+  void main() {
+		// Calculate the dot product 
+		light = dot(normal, v_surfaceToLight);
+    gl_FragColor = texture2D(u_texture, -v_texcoord);
+		gl_FragColor.r += normalDiff * 10.0;
+		gl_FragColor.rgb *= ((light) + 0.4);	// Adding ambient light
+  }
+</script>
+
+<script id="lineFragmentShader" type="notjs">
+ 
+  // fragment shaders don't have a default precision so we need
+  // to pick one. mediump is a good default
+  precision mediump float;
+	uniform sampler2D u_texture;
+	uniform float u_time;
+	varying vec2 v_texcoord;
+	varying float l_intensity;
+	varying vec3 v_surfaceToLight;
+	varying vec3 normal;
+
+	varying vec4 position;
+	float light;
+
+  void main() {
+		// Calculate the dot product 
+		light = dot(normal, v_surfaceToLight);
+    gl_FragColor = texture2D(u_texture, -v_texcoord);
+		gl_FragColor.rgb *= ((light) + 0.4);	// Adding ambient light
+		 if (cos(20.0 * position.x + 5.0 * u_time) < 0.0) {
+        discard;
+    }
+  }
+</script>
+
+
+
+
+<script src="index.js"></script>
 </body>
 </html>
