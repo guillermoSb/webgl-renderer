@@ -21,7 +21,8 @@ export class SceneObject {
 		this.sceneObjectMatrix = mat4.create();
 	}
 
-	public draw(gl: WebGLRenderingContext, program: WebGLProgram, perspectiveMatrix: mat4, lightIntensity: number, lightPosition: vec3) {
+	public draw(gl: WebGLRenderingContext, program: WebGLProgram, perspectiveMatrix: mat4, lightIntensity: number, lightPosition: vec3,
+		drawMode: number) {
 		var positionBuffer = gl.createBuffer();
 			gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 			let matrixLocation = gl.getUniformLocation(program, "u_matrix");	// Get the location of the matrix
@@ -75,7 +76,7 @@ export class SceneObject {
 				4 * 5,
 			);
 			
-			let primitiveType = gl.TRIANGLES;
+			let primitiveType = drawMode;
 			gl.drawArrays(primitiveType, 0, this.polyCount * 3);
 	}
 

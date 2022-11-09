@@ -15,6 +15,7 @@ import Renderer from "./gl/renderer";
 	const toonShaderButton = document.getElementById("toonShader");
 	const wavyShaderButton = document.getElementById("wavyShader");
 	const lineShaderButton = document.getElementById("lineShader");
+	const noiseShaderButton = document.getElementById("noiseShader");
 	
 	toonShaderButton.addEventListener("click", () => {
 		r.initProgram("toonVertexShader", "toonFragmentShader");
@@ -26,6 +27,10 @@ import Renderer from "./gl/renderer";
 
 	lineShaderButton.addEventListener("click", () => {
 		r.initProgram("toonVertexShader", "lineFragmentShader");
+	});
+
+	noiseShaderButton.addEventListener("click", () => {
+		r.initProgram("toonVertexShader", "noiseShaderFragmentShader");
 	});
 	requestAnimationFrame(t => r.draw(t));
 

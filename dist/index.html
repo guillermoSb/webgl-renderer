@@ -20,6 +20,9 @@
 				<li>
 					<button id="lineShader" class="px-2 py-1 text-white bg-indigo-600 rounded-sm hover:-translate-y-1 transition-all">Line Shader</button>
 				</li>
+				<li>
+					<button id="noiseShader" class="px-2 py-1 text-white bg-indigo-600 rounded-sm hover:-translate-y-1 transition-all">Noise Shader</button>
+				</li>
 			</ul>
 		</nav>
 	</div>
@@ -172,11 +175,47 @@
 		// Calculate the dot product 
 		light = dot(normal, v_surfaceToLight);
     gl_FragColor = texture2D(u_texture, -v_texcoord);
+		gl_FragColor.r = sin(u_time);
+		gl_FragColor.g = cos(u_time);
+		gl_FragColor.b = abs(gl_FragColor.b - 1.0);
 		gl_FragColor.rgb *= ((light) + 0.4);	// Adding ambient light
-		 if (cos(20.0 * position.x + 5.0 * u_time) < 0.0) {
+		if (cos(20.0 * position.x + 5.0 * u_time) < 0.0) {
         discard;
     }
   }
+</script>
+<script id="noiseShaderFragmentShader" type="notjs">
+ 
+  // fragment shaders don't have a default precision so we need
+  // to pick one. mediump is a good default
+  precision mediump float;
+	uniform sampler2D u_texture;
+	uniform float u_time;
+	varying vec2 v_texcoord;
+	varying float l_intensity;
+	varying vec3 v_surfaceToLight;
+	varying vec3 normal;
+
+	varying vec4 position;
+	float light;
+	float noise;
+
+	float rand(vec2 co){
+    return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
+	}
+
+  void main() {
+		// Calculate the dot product 
+		light = dot(normal, v_surfaceToLight);
+		noise = rand(v_texcoord);
+    gl_FragColor = texture2D(u_texture, -v_texcoord);
+		gl_FragColor.r = abs(1.0-gl_FragColor.r) * noise;
+		gl_FragColor.g = abs(1.0-gl_FragColor.g) * noise;
+		gl_FragColor.b = abs(1.0-gl_FragColor.b) * noise;
+		gl_FragColor.rgb *= ((light) + 0.4);	// Adding ambient light
+  }
+
+	
 </script>
 
 

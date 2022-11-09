@@ -18,7 +18,7 @@ export default class Renderer {
 	program: WebGLProgram;
 	polyCount = 0;
 	drawMode: number;
-	camPosition = vec3.fromValues(0, 0, 5);
+	camPosition = vec3.fromValues(0, 0, 4);
 	camRotation = vec3.fromValues(0, 0, 0);
 	targetPosition = vec3.fromValues(0, 0, 0);
 	zoomLevel = 5;
@@ -194,14 +194,14 @@ export default class Renderer {
 		this.delta = now - this.then;
 		this.gl.enable(this.gl.CULL_FACE);	// Do not draw back facing triangles
 		this.gl.enable(this.gl.DEPTH_TEST);	// Enable depth buffer
-		this.gl.clearColor(0, 0, 0, 1);
+		this.gl.clearColor(0, 0, 0, 0.9);
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);	// Clear depth buffer
 		this.computeCameraMatrix(vec3.create());
 		let timeUniformLocation = this.gl.getUniformLocation(this.program, "u_time");
 		this.gl.uniform1f(timeUniformLocation, now);
 		// draw
 		for (const object of this.sceneObjects) {
-			object.draw(this.gl, this.program, mat4.clone(this.perspectiveMatrix), this.lightIntensity, this.lightPosition);
+			object.draw(this.gl, this.program, mat4.clone(this.perspectiveMatrix), this.lightIntensity, this.lightPosition, this.drawMode);
 		}
 		this.then = now;
 		requestAnimationFrame(t => this.draw(t));
