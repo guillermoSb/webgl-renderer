@@ -12,6 +12,7 @@ export default class Renderer {
 	then: number;
 	rotation: vec3;
 	sceneObjects: SceneObject[] = [];
+	activeTexture: string;
 	viewMatrix: mat4;
 	perspectiveMatrix: mat4;
 	gl: WebGLRenderingContext;
@@ -26,7 +27,7 @@ export default class Renderer {
 	lightIntensity = 1;
 	lightPosition = vec3.fromValues(0, 0, 100);
 
-	constructor(width: number, height: number) {
+	constructor(width: number, height: number, t: string) {
 		// Initialize the renderer dimensions
 		this.width = width;
 		this.height = height;
@@ -55,7 +56,7 @@ export default class Renderer {
 		const textureLocation = this.gl.getUniformLocation(this.program, "u_texture");
 		const texture = gl.createTexture();
 		const image = new Image();
-		image.src = "model.bmp";
+		image.src = t;
 		image.addEventListener("load", () => {
 			this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
     	this.gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, image);
@@ -204,6 +205,8 @@ export default class Renderer {
 			object.draw(this.gl, this.program, mat4.clone(this.perspectiveMatrix), this.lightIntensity, this.lightPosition, this.drawMode);
 		}
 		this.then = now;
+		if (this.sceneObjects.length >= 0) {
+		}
 		requestAnimationFrame(t => this.draw(t));
 	}
 
