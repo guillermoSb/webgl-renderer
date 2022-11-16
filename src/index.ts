@@ -20,7 +20,7 @@ import Renderer from "./gl/renderer";
 		transformations.push(vec3.fromValues(0, 0, 0), vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 1));
 	} else if (searchModel === "cat2") {
 		activeTexture = "cat.jpg";
-		transformations.push(vec3.fromValues(0, 0, -10), vec3.fromValues(-Math.PI / 2, 0, 0), vec3.fromValues(0.2, 0.2, 0.2));
+		transformations.push(vec3.fromValues(0, -1, -3), vec3.fromValues(0, 0, 0), vec3.fromValues(0.05, 0.05, 0.05));
 	}
 	const r = new Renderer(1, 1, activeTexture);
 	r.createObj(obj, transformations[0], transformations[1], transformations[2]);
@@ -29,7 +29,7 @@ import Renderer from "./gl/renderer";
 		r.targetPosition = vec3.fromValues(0, 0, 0);
 	} else if (searchModel === "cat2") {
 		activeTexture = "cat.jpg";
-		r.targetPosition = vec3.fromValues(0, 0, -10);
+		r.targetPosition = vec3.fromValues(0, -1, -3);
 	}
 	
 	const toonShaderButton = document.getElementById("toonShader");
