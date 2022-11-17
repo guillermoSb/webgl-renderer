@@ -177,9 +177,9 @@ export default class Renderer {
 		document.onwheel = (e: WheelEvent) => {
 		
 				if (e.deltaY > 0) {
-					this.computeCameraMatrix(vec3.fromValues(0, 0, -0.5));
+					this.computeCameraMatrix(vec3.fromValues(0, 0, -1 * this.delta));
 				} else if (e.deltaY < 0) {
-					this.computeCameraMatrix(vec3.fromValues(0, 0, 0.5));
+					this.computeCameraMatrix(vec3.fromValues(0, 0, 1 * this.delta));
 				}
 			
 		};
@@ -194,6 +194,10 @@ export default class Renderer {
       cameraMatrix[13],
       cameraMatrix[14],
 		);
+	
+		if (newCamPosition[2] <= 0 || newCamPosition[2] >= 5) {
+			return;
+		}
 		this.camPosition = newCamPosition;
 		mat4.lookAt(cameraMatrix, newCamPosition,this.targetPosition, vec3.fromValues(0, 1, 0));
 		mat4.rotateX(cameraMatrix, cameraMatrix, this.camRotation[0]);
