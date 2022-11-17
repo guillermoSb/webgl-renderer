@@ -1,4 +1,4 @@
-import { Obj } from './obj';
+import { Obj } from "./obj";
 import { SceneObject } from "./sceneObject";
 import { mat4, vec3 } from "gl-matrix";
 
@@ -24,8 +24,9 @@ export default class Renderer {
 	targetPosition = vec3.fromValues(0, 0, 0);
 	zoomLevel = 5;
 	delta = 0;
-	lightIntensity = 1;
+	lightIntensity = 1.5;
 	lightPosition = vec3.fromValues(0, 0, 100);
+	imageLoaded = false;
 
 	constructor(width: number, height: number, t: string) {
 		// Initialize the renderer dimensions
@@ -62,6 +63,7 @@ export default class Renderer {
     	this.gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, image);
 			gl.generateMipmap(gl.TEXTURE_2D);
 			this.gl.uniform1i(textureLocation, 0);
+			this.imageLoaded = true;
 		});
 
 		document.onkeydown = (e) => {
@@ -191,21 +193,21 @@ export default class Renderer {
 	}
 
 	draw(now: number) {
-		now *= 0.001;
-		this.delta = now - this.then;
-		this.gl.enable(this.gl.CULL_FACE);	// Do not draw back facing triangles
-		this.gl.enable(this.gl.DEPTH_TEST);	// Enable depth buffer
-		this.gl.clearColor(0, 0, 0, 0.9);
-		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);	// Clear depth buffer
-		this.computeCameraMatrix(vec3.create());
-		let timeUniformLocation = this.gl.getUniformLocation(this.program, "u_time");
-		this.gl.uniform1f(timeUniformLocation, now);
-		// draw
-		for (const object of this.sceneObjects) {
-			object.draw(this.gl, this.program, mat4.clone(this.perspectiveMatrix), this.lightIntensity, this.lightPosition, this.drawMode);
-		}
-		this.then = now;
-		if (this.sceneObjects.length >= 0) {
+		if (this.imageLoaded) {
+			now *= 0.001;
+			this.delta = now - this.then;
+			this.gl.enable(this.gl.CULL_FACE);	// Do not draw back facing triangles
+			this.gl.enable(this.gl.DEPTH_TEST);	// Enable depth buffer
+			this.gl.clearColor(0, 0, 0, 0.9);
+			this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);	// Clear depth buffer
+			this.computeCameraMatrix(vec3.create());
+			let timeUniformLocation = this.gl.getUniformLocation(this.program, "u_time");
+			this.gl.uniform1f(timeUniformLocation, now);
+			// draw
+			for (const object of this.sceneObjects) {
+				object.draw(this.gl, this.program, mat4.clone(this.perspectiveMatrix), this.lightIntensity, this.lightPosition, this.drawMode);
+			}
+			this.then = now;
 		}
 		requestAnimationFrame(t => this.draw(t));
 	}
