@@ -27,6 +27,9 @@ export default class Renderer {
 	lightIntensity = 1.5;
 	lightPosition = vec3.fromValues(0, 0, 100);
 	imageLoaded = false;
+	prevMouseX: number;
+	prevMouseY: number;
+	mouseMode = 0;
 
 	constructor(width: number, height: number, t: string) {
 		// Initialize the renderer dimensions
@@ -91,6 +94,10 @@ export default class Renderer {
 						this.zoomLevel += 1;
 					}	
 					break;
+				case "m":
+					const audio: HTMLAudioElement = document.getElementById('audio') as HTMLAudioElement;
+					audio.muted = !audio.muted;
+					break;
 				case "w":
 					this.targetPosition[1] += 4 * this.delta;
 					this.computeCameraMatrix(vec3.fromValues(0, 4 * this.delta, 0));
@@ -124,6 +131,57 @@ export default class Renderer {
 				default:
 					break;
 			}
+		};
+
+		document.getElementById("renderer").onclick = () => {
+			this.mouseMode++;
+			const mouseText = document.getElementById("mouse-mode");
+		
+			if (this.mouseMode === 1) {
+				mouseText.innerHTML = "Mouse Mode: Rotate X";
+			}
+			if (this.mouseMode === 2) {
+				mouseText.innerHTML = "Mouse Mode: Rotate Y";
+			}
+			if (this.mouseMode == 3) {
+				mouseText.innerHTML = "Mouse Mode: OFF (Click To Switch)";
+				this.mouseMode = 0;
+			}
+		};
+
+		document.onmousemove = (event) => {
+			if (!this.mouseMode) {
+				return;
+			}
+		
+			
+			if (event.pageY > 60) {
+				if (event.pageX > this.prevMouseX  && this.mouseMode == 1) {
+					this.camRotation[1] += 4 * this.delta;
+				} else if (event.pageX < this.prevMouseX && this.mouseMode == 1) {
+					this.camRotation[1] -= 4 * this.delta;
+				} else if (event.pageY > this.prevMouseY && this.mouseMode == 2) {
+					this.targetPosition[1] += 4 * this.delta;
+					this.computeCameraMatrix(vec3.fromValues(0, 4 * this.delta, 0));
+				} else if (event.pageY < this.prevMouseY && this.mouseMode == 2) {
+					this.targetPosition[1] -= 4 * this.delta;
+					this.computeCameraMatrix(vec3.fromValues(0, -4 * this.delta, 0));
+				}
+		
+				this.prevMouseX = event.pageX;
+				this.prevMouseY = event.pageY;
+			}
+		};
+		
+
+		document.onwheel = (e: WheelEvent) => {
+		
+				if (e.deltaY > 0) {
+					this.computeCameraMatrix(vec3.fromValues(0, 0, -0.5));
+				} else if (e.deltaY < 0) {
+					this.computeCameraMatrix(vec3.fromValues(0, 0, 0.5));
+				}
+			
 		};
 	}
 
@@ -261,6 +319,4 @@ export default class Renderer {
 		console.error(gl.getProgramInfoLog(program));
 		gl.deleteProgram(program);
 	}
-
-
 }
