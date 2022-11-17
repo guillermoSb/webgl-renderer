@@ -17,4 +17,4 @@ Este proyecto es un renderizador elaborado con WebGL y Typescript. Se puede ver 
 
 
 ## Recursos que utilicé
-- [OpenGLFundamentals](https://webglfundamentals.org/)
+- [OpenGLFundamentals](https://guillermosb.github.io/webgl-renderer/?model=face)
