@@ -1,7 +1,7 @@
 # Webgl Renderer
 Gráficas por Computadora - UVG - 2022
 
-Este proyecto es un renderizador elaborado con WebGL y Typescript. Se puede ver una versión en vivo del proyecto [aquí](https://guillermosb.github.io/webgl-renderer/). 
+Este proyecto es un renderizador elaborado con WebGL y Typescript. Se puede ver una versión en vivo del proyecto [aquí](https://guillermosb.github.io/webgl-renderer/?model=face). 
 
 ## Cosas que aprendí en este proyecto
 - Cargar modelos 3D en un sitio web.
