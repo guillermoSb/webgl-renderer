@@ -195,7 +195,7 @@ export default class Renderer {
       cameraMatrix[14],
 		);
 	
-		if (newCamPosition[2] <= 0 || newCamPosition[2] >= 5) {
+		if (newCamPosition[2] <= 0 || newCamPosition[2] >= 10) {
 			return;
 		}
 		this.camPosition = newCamPosition;
